@@ -10,8 +10,11 @@ test('홈: 리셋 소식·통계·전체 기록 (모두 무료)', async ({ page 
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('리셋됐어요');
   await expect(page.getByText('리셋되기 전 알려드릴게요')).toBeVisible();
+  await expect(page.getByText('이제 귀찮게 확인하지 않아도 돼요')).toBeVisible();
+  await expect(page.getByText('바쁘셔도 놓치지 않게 바로 보내드려요.')).toBeVisible();
   await expect(page.getByText(/확인했어요|분마다|codex-reset\.com/)).toHaveCount(0);
   await expect(page.locator('main')).not.toContainText('Codex'); // 용어는 GPT로 통일
+  await expect(page.locator('main')).not.toContainText(/tibo|thsottiaux/i);
   await expect(page.locator('.event-row').first()).toContainText('GPT 사용량이 리셋됐어요');
   await expect(page.getByRole('region', { name: '리셋 통계' })).toContainText('최근 90일');
   // 최근 3개만 보이고, 더보기로 나머지를 펼치고 접어요
@@ -31,7 +34,7 @@ test('상세: 원문과 요약', async ({ page }, info) => {
   await page.locator('.event-row').first().click();
   const sheet = page.getByRole('dialog');
   await expect(sheet.getByText('리셋 완료')).toBeVisible();
-  await expect(sheet.getByText('@thsottiaux')).toBeVisible();
+  await expect(sheet.getByText('X 원문')).toBeVisible();
   await expect(sheet.getByRole('button', { name: 'X에서 원문 보기' })).toBeVisible();
   await page.screenshot({ path: shot('detail', info.project.name), animations: 'disabled' });
   await page.keyboard.press('Escape');
