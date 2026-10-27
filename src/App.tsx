@@ -9,6 +9,7 @@ const TEMPLATES = {
   reset: import.meta.env.VITE_TOSS_RESET_TEMPLATE as string | undefined,
   planned: import.meta.env.VITE_TOSS_PLAN_TEMPLATE as string | undefined,
 };
+const RECENT_LIMIT = 3;
 type SheetKind =
   | { type: 'event'; event: ResetEvent }
   | { type: 'settings' }
@@ -31,6 +32,8 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   /** 알림을 받기 전, 홈 화면 스위치로 고른 알림 종류 */
   const [draft, setDraft] = useState<SubscriptionState['types']>({ reset: true, planned: false });
+  /** 최근 리셋 소식은 3개만 보이고 나머지는 더보기로 펼쳐요. */
+  const [showAllEvents, setShowAllEvents] = useState(false);
   /** 저장 중인 최신 선택과 저장 순서 */
   const latestTypes = useRef<SubscriptionState['types'] | null>(null);
   const saveQueue = useRef<Promise<unknown>>(Promise.resolve());
@@ -181,7 +184,7 @@ export default function App() {
           {feed && events.length === 0 && <div className="empty"><EmptyMoon /><p>아직 새 리셋 소식이 없어요</p></div>}
           {feedError && !feed && <div className="empty"><p>소식을 불러오지 못했어요</p><button className="text-button" onClick={loadFeed}>다시 불러오기</button></div>}
           <ul className="event-list">
-            {events.map(e => (
+            {(showAllEvents ? events : events.slice(0, RECENT_LIMIT)).map(e => (
               <li key={e.id}>
                 <button className="event-row" onClick={() => setSheet({ type: 'event', event: e })}>
                   <EventIcon kind={e.kind} />
@@ -194,6 +197,12 @@ export default function App() {
               </li>
             ))}
           </ul>
+          {events.length > RECENT_LIMIT && (
+            <button className="more-button" aria-expanded={showAllEvents} onClick={() => setShowAllEvents(v => !v)}>
+              {showAllEvents ? '접기' : `더보기 (${events.length - RECENT_LIMIT}개)`}
+              <svg className={`more-chevron ${showAllEvents ? 'open' : ''}`} viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </button>
+          )}
         </section>
 
         <section className="card" aria-labelledby="how-title">

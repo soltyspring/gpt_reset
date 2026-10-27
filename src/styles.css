@@ -170,3 +170,10 @@ button, label.toggle-row { cursor: pointer; }
 .alert-toggles { padding: 0 24px; }
 .alerts-note { padding: 0 24px 8px; margin-top: 0; }
 .toggle-row.is-disabled { opacity: .6; cursor: default; }
+
+/* 최근 리셋 소식 더보기 */
+.more-button { width: calc(100% - 48px); margin: 4px 24px 16px; min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 4px; border-radius: 14px; background: var(--grey-100); color: var(--grey-700); font-size: 15px; font-weight: 600; transition: background .15s; }
+.more-button:active { background: var(--grey-200); }
+@media (hover: hover) { .more-button:hover { background: var(--grey-200); } }
+.more-chevron { transition: transform .2s; }
+.more-chevron.open { transform: rotate(180deg); }
