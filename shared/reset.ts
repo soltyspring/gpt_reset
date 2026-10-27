@@ -153,7 +153,7 @@ export function koreanCopy(kind: Exclude<ResetKind, 'none'>, scope: string) {
   };
   return {
     title: '곧 GPT 사용량이 리셋돼요',
-    summary: `Tibo가 ${who}리셋을 예고했어요. 리셋되면 다시 알려드릴게요.`,
+    summary: `${who}리셋이 예고됐어요. 리셋되면 다시 알려드릴게요.`,
   };
 }
 

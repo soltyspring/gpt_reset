@@ -168,10 +168,11 @@ export default function App() {
       <main>
         <section className="hero" aria-labelledby="hero-title">
           <HeroGauge fresh={fresh} />
+          <p className="kicker">이제 귀찮게 확인하지 않아도 돼요</p>
           <h1 id="hero-title">{fresh ? <>GPT 사용량이<br />리셋됐어요</> : <>GPT 사용량이 리셋되면<br />바로 알려드릴게요</>}</h1>
           <p className="hero-sub">
             {fresh && latest ? `${relativeLabel(latest.postedAt, now)} · ${latest.scope || '전체'} 대상이에요`
-              : 'Tibo가 X에 리셋 소식을 올리면 토스 알림으로 알려드려요.'}
+              : 'GPT 사용량 리셋 소식을 토스 알림으로 알려드려요.'}
           </p>
           <p className="status live"><span className="dot" aria-hidden="true" />리셋되기 전 알려드릴게요</p>
         </section>
@@ -208,9 +209,9 @@ export default function App() {
         <section className="card" aria-labelledby="how-title">
           <h2 id="how-title" className="section-title">이렇게 알려드려요</h2>
           <ol className="steps">
-            <Step icon="watch" title="리셋 소식을 살펴봐요" text="Tibo(@thsottiaux)가 올리는 리셋 소식을 확인해요." />
+            <Step icon="watch" title="리셋 소식을 살펴봐요" text="OpenAI가 공개하는 리셋 소식을 확인해요." />
             <Step icon="detect" title="리셋 공지만 골라요" text="사용량 리셋 소식일 때만 알림을 보내요." />
-            <Step icon="notify" title="토스로 알려드려요" text="밤에도 놓치지 않게 바로 보내드려요." />
+            <Step icon="notify" title="토스로 알려드려요" text="바쁘셔도 놓치지 않게 바로 보내드려요." />
           </ol>
         </section>
 
@@ -224,7 +225,7 @@ export default function App() {
           <div className="alert-toggles">
             <Toggle label="리셋 완료 알림" desc="사용량이 리셋되면 바로 알려드려요" checked={subscribed ? !!sub?.types.reset : draft.reset} disabled={busy}
               onChange={v => void toggleType('reset', v)} />
-            <Toggle label="리셋 예고 알림" desc="Tibo가 리셋을 예고하면 미리 알려드려요" checked={subscribed ? !!sub?.types.planned : draft.planned} disabled={busy}
+            <Toggle label="리셋 예고 알림" desc="리셋이 예고되면 미리 알려드려요" checked={subscribed ? !!sub?.types.planned : draft.planned} disabled={busy}
               onChange={v => void toggleType('planned', v)} />
           </div>
           <p className="small alerts-note">{subscribed ? '하나만 켜도 되고, 둘 다 켜도 돼요' : '받을 알림을 고른 뒤 아래 버튼을 눌러 주세요'}</p>
@@ -293,7 +294,7 @@ function EventDetail({ event }: { event: ResetEvent }) {
       </dl>
       <figure className="quote">
         <blockquote lang="en">{event.text}</blockquote>
-        <figcaption>Tibo · @thsottiaux</figcaption>
+        <figcaption>X 원문</figcaption>
       </figure>
       <button className="cta weak full" onClick={() => void openExternal(event.url)}>X에서 원문 보기</button>
     </div>
@@ -308,7 +309,7 @@ function Setup({ draft, busy, onPick, onStart }: { draft: SubscriptionState['typ
       <h2 className="detail-title">리셋되면 가장 빠르게<br />알려드릴게요</h2>
       <p className="detail-summary">받고 싶은 알림을 골라 주세요. 하나만 골라도 돼요.</p>
       <Toggle label="리셋 완료 알림" desc="사용량이 리셋되면 바로 알려드려요" checked={draft.reset} disabled={busy} onChange={v => onPick('reset', v)} />
-      <Toggle label="리셋 예고 알림" desc="Tibo가 리셋을 예고하면 미리 알려드려요" checked={draft.planned} disabled={busy} onChange={v => onPick('planned', v)} />
+      <Toggle label="리셋 예고 알림" desc="리셋이 예고되면 미리 알려드려요" checked={draft.planned} disabled={busy} onChange={v => onPick('planned', v)} />
       <button className="cta full" onClick={onStart} disabled={busy || none} aria-busy={busy}>
         {busy ? <span className="spinner" aria-label="연결 중" /> : none ? '받을 알림을 골라 주세요' : '알림 받기'}
       </button>
@@ -321,7 +322,7 @@ function Settings({ sub, onChange }: { sub: SubscriptionState; onChange: (t: Sub
     <div className="settings">
       <h2 className="detail-title">알림 설정</h2>
       <Toggle label="리셋 완료 알림" desc="사용량이 리셋되면 바로 알려드려요" checked={sub.types.reset} onChange={v => onChange({ ...sub.types, reset: v })} />
-      <Toggle label="리셋 예고 알림" desc="Tibo가 리셋을 예고하면 알려드려요" checked={sub.types.planned} onChange={v => onChange({ ...sub.types, planned: v })} />
+      <Toggle label="리셋 예고 알림" desc="리셋이 예고되면 미리 알려드려요" checked={sub.types.planned} onChange={v => onChange({ ...sub.types, planned: v })} />
       {sub.since && <p className="small">{kstLabel(sub.since)}부터 알림을 받고 있어요</p>}
       <button className="text-button danger" onClick={() => onChange({ reset: false, planned: false })}>알림 끄기</button>
     </div>
@@ -363,7 +364,7 @@ const policyTitle = { terms: '이용약관', privacy: '개인정보 처리방침
 function Policy({ kind }: { kind: 'terms' | 'privacy' }) {
   const sections = {
     terms: [
-      ['서비스 안내', 'GPT 리셋 레이더는 블루씨엘이 운영하며, Tibo(@thsottiaux)가 공개한 GPT 사용량 리셋 소식을 10분 간격으로 확인해 알려드리는 무료 참고용 서비스예요. 리셋 기록은 독립 트래커 codex-reset.com의 공개 데이터를 사용해요. OpenAI·X·codex-reset.com과 제휴하거나 승인받은 서비스가 아니에요.'],
+      ['서비스 안내', 'GPT 리셋 레이더는 블루씨엘이 운영하며, OpenAI가 공개한 GPT 사용량 리셋 소식을 10분 간격으로 확인해 알려드리는 무료 참고용 서비스예요. 리셋 기록은 독립 트래커 codex-reset.com의 공개 데이터를 사용해요. OpenAI·X·codex-reset.com과 제휴하거나 승인받은 서비스가 아니에요.'],
       ['알림의 한계', '게시물 확인 주기, X·토스 서비스 상태, 자동 분류 오류로 알림이 늦거나 누락되거나 잘못 갈 수 있어요. 리셋 여부와 횟수는 OpenAI가 정하며 GPT 리셋 레이더는 이를 보장하지 않아요. 실제 사용량은 GPT에서 확인해 주세요.'],
       ['알림 해지', '앱의 알림 설정에서 언제든 알림을 끌 수 있어요. GPT 리셋 레이더는 무료로 제공해요.'],
       ['변경과 문의', '서비스 내용이 바뀌거나 중단될 수 있으며 중요한 변경은 시행 7일 전에 앱에서 알려드려요. 문의: bluecl@bluecl.cloud'],

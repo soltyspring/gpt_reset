@@ -177,3 +177,6 @@ button, label.toggle-row { cursor: pointer; }
 @media (hover: hover) { .more-button:hover { background: var(--grey-200); } }
 .more-chevron { transition: transform .2s; }
 .more-chevron.open { transform: rotate(180deg); }
+
+/* 첫 화면 한마디 */
+.kicker { display: inline-block; margin: 4px 0 10px; padding: 6px 12px; border-radius: 999px; background: var(--blue-pale); color: var(--blue-dark); font-size: 15px; font-weight: 700; letter-spacing: -.02em; }
