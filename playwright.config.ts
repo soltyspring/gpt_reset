@@ -12,8 +12,10 @@ export default defineConfig({
     env: { TOSS_MOCK: 'true', TIBO_DB_PATH: '.data/e2e.sqlite', TIBO_SEED_DEMO: 'true' },
   },
   projects: [
-    { name: 'mobile', use: { viewport: { width: 375, height: 812 } } },
+    { name: 'mobile', use: { viewport: { width: 375, height: 812 } }, testMatch: /flows/ },
     { name: 'tablet', use: { viewport: { width: 768, height: 1024 } }, testMatch: /flows/, grep: /홈|아래 버튼|화면 순서/ },
     { name: 'desktop', use: { viewport: { width: 1440, height: 900 } }, testMatch: /flows/, grep: /홈/ },
+    // 콘솔 업로드용 세로형 스크린샷 636×1048 (318×524 × 2배)
+    { name: 'store', use: { viewport: { width: 318, height: 524 }, deviceScaleFactor: 2 }, testMatch: /store-shots/ },
   ],
 });
