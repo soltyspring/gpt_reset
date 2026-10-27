@@ -31,41 +31,55 @@ test('상세: 원문과 요약', async ({ page }, info) => {
   await expect(sheet).toBeHidden();
 });
 
-test('알림 고르기 → 버튼으로 시작 → 홈에서 바꾸기 → 새로고침 유지 → 끄기', async ({ page }, info) => {
+test('화면 순서: 첫 화면 → 통계 → … → 받을 알림이 맨 아래', async ({ page }) => {
   await page.goto('/');
+  const order = await page.locator('main > section, main > footer').evaluateAll(els => els.map(e =>
+    e.classList.contains('hero') ? 'hero' : e.classList.contains('stats') ? 'stats' : e.classList.contains('alerts') ? 'alerts' : e.tagName === 'FOOTER' ? 'footer' : 'card'));
+  expect(order[0]).toBe('hero');
+  expect(order[1]).toBe('stats');
+  expect(order.at(-2)).toBe('alerts');
+  expect(order.at(-1)).toBe('footer');
+});
+
+test('아래 버튼 → 알림 설정 창 → 고르고 시작 → 홈에서 바꾸기 → 새로고침 유지 → 끄기', async ({ page }, info) => {
+  await page.goto('/');
+  // 고정 버튼은 알림 설정 창을 열기만 해요(바로 등록하지 않아요).
+  await page.getByRole('button', { name: '리셋되면 가장 빠르게 알려드릴까요?' }).click();
+  const sheet = page.getByRole('dialog', { name: '알림 설정' });
+  await expect(sheet).toBeVisible();
+  await expect(page.getByRole('status')).toHaveCount(0);
+  await page.screenshot({ path: shot('settings', info.project.name), animations: 'disabled' });
+  // 기본은 리셋 완료만 선택. 예고만 고르고 시작
+  await expect(sheet.getByRole('switch', { name: /리셋 완료 알림/ })).toBeChecked();
+  await sheet.getByText('리셋 예고 알림').click();
+  await sheet.getByText('리셋 완료 알림').click();
+  await sheet.getByRole('button', { name: '알림 받기', exact: true }).click();
+  await expect(page.getByRole('status')).toHaveText('리셋 예고를 알려드릴게요');
+  await expect(sheet).toBeHidden();
+  // 맨 아래 카드에 같은 설정이 보이고, 받는 중에는 바로 저장돼요
   const card = page.getByRole('region', { name: '받을 알림' });
   const reset = card.getByRole('switch', { name: /리셋 완료 알림/ });
   const planned = card.getByRole('switch', { name: /리셋 예고 알림/ });
-  // 기본은 리셋 완료만 선택. 스위치를 눌러도 아직 등록하지 않아요.
-  await expect(reset).toBeChecked();
-  await expect(planned).not.toBeChecked();
-  await card.getByText('리셋 예고 알림').click();
-  await card.getByText('리셋 완료 알림').click();
-  await expect(page.getByRole('status')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: '알림 받는 중' })).toHaveCount(0);
-  // 예고만 고르고 시작
-  await page.getByRole('button', { name: '알림 받기', exact: true }).click();
-  await expect(page.getByRole('status')).toHaveText('리셋 예고를 알려드릴게요');
   await expect(planned).toBeChecked();
   await expect(reset).not.toBeChecked();
-  await page.screenshot({ path: shot('settings', info.project.name), fullPage: true, animations: 'disabled' });
-  // 받는 중에는 홈 스위치가 바로 저장돼요
   await card.getByText('리셋 완료 알림').click();
   await expect(page.getByRole('status')).toHaveText('리셋 완료 알림을 켰어요');
   await page.reload();
   await expect(reset).toBeChecked();
   await expect(planned).toBeChecked();
-  // 둘 다 끄면 알림이 꺼져요
+  // 둘 다 끄면 알림이 꺼지고 버튼이 다시 나와요
   await card.getByText('리셋 완료 알림').click();
   await card.getByText('리셋 예고 알림').click();
   await expect(page.getByRole('status')).toHaveText('알림을 껐어요');
-  await expect(page.getByRole('button', { name: /알림 받기|받을 알림을 골라 주세요/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: '리셋되면 가장 빠르게 알려드릴까요?' })).toBeVisible();
 });
 
-test('아무 알림도 고르지 않으면 시작 버튼이 꺼져요', async ({ page }) => {
+test('알림 설정 창에서 아무것도 고르지 않으면 시작 버튼이 꺼져요', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('region', { name: '받을 알림' }).getByText('리셋 완료 알림').click();
-  await expect(page.getByRole('button', { name: '받을 알림을 골라 주세요' })).toBeDisabled();
+  await page.getByRole('button', { name: '리셋되면 가장 빠르게 알려드릴까요?' }).click();
+  const sheet = page.getByRole('dialog', { name: '알림 설정' });
+  await sheet.getByText('리셋 완료 알림').click();
+  await expect(sheet.getByRole('button', { name: '받을 알림을 골라 주세요' })).toBeDisabled();
 });
 
 test('약관과 처리방침', async ({ page }) => {
