@@ -9,7 +9,10 @@ const shot = (name: string, project: string) => `docs/screenshots/${project}-${n
 test('홈: 리셋 소식·통계·전체 기록 (모두 무료)', async ({ page }, info) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('리셋됐어요');
-  await expect(page.getByText('리셋되기 전 알려드릴게요')).toBeVisible();
+  // 첫 화면은 같은 말을 반복하지 않아요("알려드"는 제목에서만 한 번까지)
+  const heroText = await page.locator('.hero').innerText();
+  expect((heroText.match(/알려드/g) ?? []).length).toBeLessThanOrEqual(1);
+  await expect(page.getByText('리셋되기 전 알려드릴게요')).toHaveCount(0);
   await expect(page.getByText('이제 귀찮게 확인하지 않아도 돼요')).toBeVisible();
   await expect(page.getByText('바쁘셔도 놓치지 않게 바로 보내드려요.')).toBeVisible();
   await expect(page.getByText(/확인했어요|분마다|codex-reset\.com/)).toHaveCount(0);
@@ -43,6 +46,7 @@ test('상세: 원문과 요약', async ({ page }, info) => {
 
 test('화면 순서: 첫 화면 → 통계 → … → 받을 알림이 맨 아래', async ({ page }) => {
   await page.goto('/');
+  await expect(page.getByRole('region', { name: '리셋 통계' })).toBeVisible(); // 데이터가 온 뒤에 순서를 봐요
   const order = await page.locator('main > section, main > footer').evaluateAll(els => els.map(e =>
     e.classList.contains('hero') ? 'hero' : e.classList.contains('stats') ? 'stats' : e.classList.contains('alerts') ? 'alerts' : e.tagName === 'FOOTER' ? 'footer' : 'card'));
   expect(order[0]).toBe('hero');
