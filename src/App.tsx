@@ -12,6 +12,7 @@ const TEMPLATES = {
 type SheetKind =
   | { type: 'event'; event: ResetEvent }
   | { type: 'settings' }
+  | { type: 'setup' }
   | { type: 'policy'; kind: 'terms' | 'privacy' }
   | null;
 
@@ -82,18 +83,20 @@ export default function App() {
   }
 
   async function subscribe(types: SubscriptionState['types'] = { reset: true, planned: true }) {
-    if (busy) return;
+    if (busy) return false;
     setBusy(true);
     try {
-      if (!(await agreeFor(types))) return;
-      if (!(await ensureSession())) return;
+      if (!(await agreeFor(types))) return false;
+      if (!(await ensureSession())) return false;
       const next = await api.save(types);
       setSub(next);
       haptic('success');
       showToast(types.reset && types.planned ? '리셋 예고와 리셋 모두 알려드릴게요' : types.planned ? '리셋 예고를 알려드릴게요' : '이제 리셋되면 바로 알려드릴게요');
+      return true;
     } catch (e) {
       haptic('error');
       showToast(e instanceof ApiError ? e.message : '잠시 후 다시 시도해 주세요');
+      return false;
     } finally { setBusy(false); }
   }
 
@@ -170,17 +173,6 @@ export default function App() {
           <p className="status live"><span className="dot" aria-hidden="true" />리셋되기 전 알려드릴게요</p>
         </section>
 
-        <section className="card alerts" aria-labelledby="alerts-title">
-          <h2 id="alerts-title" className="section-title">받을 알림</h2>
-          <div className="alert-toggles">
-            <Toggle label="리셋 완료 알림" desc="사용량이 리셋되면 바로 알려드려요" checked={subscribed ? !!sub?.types.reset : draft.reset} disabled={busy}
-              onChange={v => void toggleType('reset', v)} />
-            <Toggle label="리셋 예고 알림" desc="Tibo가 리셋을 예고하면 미리 알려드려요" checked={subscribed ? !!sub?.types.planned : draft.planned} disabled={busy}
-              onChange={v => void toggleType('planned', v)} />
-          </div>
-          <p className="small alerts-note">{subscribed ? '하나만 켜도 되고, 둘 다 켜도 돼요' : '받을 알림을 고르고 아래 버튼을 눌러 주세요'}</p>
-        </section>
-
         {feed && <Stats feed={feed} />}
 
         <section className="card" aria-labelledby="recent-title">
@@ -218,6 +210,17 @@ export default function App() {
           <button className="pill-button" onClick={share}>공유하기</button>
         </section>
 
+        <section className="card alerts" aria-labelledby="alerts-title">
+          <h2 id="alerts-title" className="section-title">받을 알림</h2>
+          <div className="alert-toggles">
+            <Toggle label="리셋 완료 알림" desc="사용량이 리셋되면 바로 알려드려요" checked={subscribed ? !!sub?.types.reset : draft.reset} disabled={busy}
+              onChange={v => void toggleType('reset', v)} />
+            <Toggle label="리셋 예고 알림" desc="Tibo가 리셋을 예고하면 미리 알려드려요" checked={subscribed ? !!sub?.types.planned : draft.planned} disabled={busy}
+              onChange={v => void toggleType('planned', v)} />
+          </div>
+          <p className="small alerts-note">{subscribed ? '하나만 켜도 되고, 둘 다 켜도 돼요' : '받을 알림을 고른 뒤 아래 버튼을 눌러 주세요'}</p>
+        </section>
+
         <footer className="footer">
           <p>GPT 리셋 레이더는 OpenAI·X와 관련 없는 개인 서비스예요. 공개 게시물을 바탕으로 알려드리며, 실제 사용량은 GPT에서 확인해 주세요.</p>
           <p className="footer-links">
@@ -231,12 +234,18 @@ export default function App() {
       <div className="bottom-cta">
         {subscribed
           ? <button className="cta weak" onClick={() => setSheet({ type: 'settings' })}><BellOn /> 알림 받는 중</button>
-          : <button className="cta" onClick={() => void subscribe(draft)} disabled={busy || (!draft.reset && !draft.planned)} aria-busy={busy}>{busy ? <span className="spinner" aria-label="연결 중" /> : !draft.reset && !draft.planned ? '받을 알림을 골라 주세요' : '알림 받기'}</button>}
+          : <button className="cta" onClick={() => setSheet({ type: 'setup' })}><BellOn /> 리셋되면 가장 빠르게 알려드릴까요?</button>}
       </div>
 
       {toast && <div className="toast" role="status">{toast}</div>}
 
       {sheet?.type === 'event' && <Sheet title={koreanCopy(sheet.event.kind, sheet.event.scope).title} onClose={() => setSheet(null)}><EventDetail event={sheet.event} /></Sheet>}
+      {sheet?.type === 'setup' && (
+        <Sheet title="알림 설정" onClose={() => setSheet(null)}>
+          <Setup draft={draft} busy={busy} onPick={(kind, v) => setDraft(d => ({ ...d, [kind]: v }))}
+            onStart={async () => { if (await subscribe(draft)) setSheet(null); }} />
+        </Sheet>
+      )}
       {sheet?.type === 'settings' && sub && <Sheet title="알림 설정" onClose={() => setSheet(null)}><Settings sub={sub} onChange={t => void changeTypes(t)} /></Sheet>}
       {sheet?.type === 'policy' && <Sheet title={policyTitle[sheet.kind]} onClose={() => setSheet(null)}><Policy kind={sheet.kind} /></Sheet>}
     </div>
@@ -278,6 +287,22 @@ function EventDetail({ event }: { event: ResetEvent }) {
         <figcaption>Tibo · @thsottiaux</figcaption>
       </figure>
       <button className="cta weak full" onClick={() => void openExternal(event.url)}>X에서 원문 보기</button>
+    </div>
+  );
+}
+
+/** 알림을 받기 전: 받을 알림을 고르고 시작해요. */
+function Setup({ draft, busy, onPick, onStart }: { draft: SubscriptionState['types']; busy: boolean; onPick: (kind: 'reset' | 'planned', v: boolean) => void; onStart: () => void }) {
+  const none = !draft.reset && !draft.planned;
+  return (
+    <div className="settings setup">
+      <h2 className="detail-title">리셋되면 가장 빠르게<br />알려드릴게요</h2>
+      <p className="detail-summary">받고 싶은 알림을 골라 주세요. 하나만 골라도 돼요.</p>
+      <Toggle label="리셋 완료 알림" desc="사용량이 리셋되면 바로 알려드려요" checked={draft.reset} disabled={busy} onChange={v => onPick('reset', v)} />
+      <Toggle label="리셋 예고 알림" desc="Tibo가 리셋을 예고하면 미리 알려드려요" checked={draft.planned} disabled={busy} onChange={v => onPick('planned', v)} />
+      <button className="cta full" onClick={onStart} disabled={busy || none} aria-busy={busy}>
+        {busy ? <span className="spinner" aria-label="연결 중" /> : none ? '받을 알림을 골라 주세요' : '알림 받기'}
+      </button>
     </div>
   );
 }
