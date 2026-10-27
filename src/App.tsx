@@ -172,9 +172,8 @@ export default function App() {
           <h1 id="hero-title">{fresh ? <>GPT 사용량이<br />리셋됐어요</> : <>GPT 사용량이 리셋되면<br />바로 알려드릴게요</>}</h1>
           <p className="hero-sub">
             {fresh && latest ? `${relativeLabel(latest.postedAt, now)} · ${latest.scope || '전체'} 대상이에요`
-              : 'GPT 사용량 리셋 소식을 토스 알림으로 알려드려요.'}
+              : latest ? `마지막 리셋 · ${relativeLabel(latest.postedAt, now)}` : '아직 리셋 소식이 없어요'}
           </p>
-          <p className="status live"><span className="dot" aria-hidden="true" />리셋되기 전 알려드릴게요</p>
         </section>
 
         {feed && <Stats feed={feed} />}
