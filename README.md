@@ -49,7 +49,7 @@ npx ait deploy      # 콘솔 업로드 (테스트 링크 출력)
 |---|---|
 | 앱 이름 `tibo`, 로고 `docs/brand/logo-600.png` | 앱인토스 콘솔 |
 | mTLS 인증서 → `TOSS_MTLS_CERT`·`TOSS_MTLS_KEY` | 콘솔 › 개발 › mTLS 인증서 |
-| 기능성 캠페인 2개: 리셋 완료 `tibo-reset2`, 리셋 예고 `tibo-plan`. 같은 알림동의문을 둘 다에 연결하고 검수 승인 | 콘솔 › 푸시알림 |
+| 기능성 캠페인 2개: 리셋 완료 `tibo-reset2`, 리셋 예고 `tibo-plan2`. 같은 알림동의문을 둘 다에 연결하고 검수 승인 | 콘솔 › 푸시알림 |
 | X API Bearer 토큰 → `X_BEARER_TOKEN` | developer.x.com (pay-per-use) |
 
 캠페인 문구는 고정 문장이에요(리셋 완료: 제목 `리셋됐어요` / 본문 `GPT 사용량이 다시 채워졌어요.`). 서버는 `title`·`summary`·`scope`·`postedAt`도 함께 보내지만 문구에 쓰지 않으면 무시돼요. 앱은 고른 알림마다 해당 캠페인 코드로 `Notification.requestAgreement`를 호출해요. 같은 동의문이면 두 번째는 화면 없이 넘어가요.
