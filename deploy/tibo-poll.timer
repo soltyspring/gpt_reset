@@ -1,0 +1,11 @@
+[Unit]
+Description=Check Tibo's X posts every 10 minutes
+
+[Timer]
+OnCalendar=*:0/10
+Persistent=true
+AccuracySec=30s
+Unit=tibo-poll.service
+
+[Install]
+WantedBy=timers.target

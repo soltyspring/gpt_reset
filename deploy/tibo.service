@@ -1,0 +1,17 @@
+[Unit]
+Description=Tibo reset alarm API
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/solty/dev/tibo/current
+Environment=NODE_ENV=production
+EnvironmentFile=/home/solty/dev/tibo/.env
+ExecStart=/home/solty/dev/tibo/node/bin/node node_modules/tsx/dist/cli.mjs server/index.ts
+Restart=on-failure
+RestartSec=10
+NoNewPrivileges=true
+UMask=0077
+
+[Install]
+WantedBy=default.target

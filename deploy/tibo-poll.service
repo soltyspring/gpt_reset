@@ -1,0 +1,13 @@
+[Unit]
+Description=Check Tibo's X posts for Codex resets
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/solty/dev/tibo/current
+Environment=NODE_ENV=production
+EnvironmentFile=/home/solty/dev/tibo/.env
+ExecStart=/usr/bin/flock -n /home/solty/dev/tibo/data/poll.lock /home/solty/dev/tibo/node/bin/node node_modules/tsx/dist/cli.mjs scripts/poll.ts
+TimeoutStartSec=5min
+NoNewPrivileges=true
+UMask=0077
