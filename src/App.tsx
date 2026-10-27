@@ -156,7 +156,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="top-bar">
-        <Logo size={26} /><span className="brand-name">빠른 GPT 초기화</span>
+        <Logo size={26} /><span className="brand-name">GPT 리셋 레이더</span>
       </header>
 
       <main>
@@ -219,7 +219,7 @@ export default function App() {
         </section>
 
         <footer className="footer">
-          <p>빠른 GPT 초기화는 OpenAI·X와 관련 없는 개인 서비스예요. 공개 게시물을 바탕으로 알려드리며, 실제 사용량은 GPT에서 확인해 주세요.</p>
+          <p>GPT 리셋 레이더는 OpenAI·X와 관련 없는 개인 서비스예요. 공개 게시물을 바탕으로 알려드리며, 실제 사용량은 GPT에서 확인해 주세요.</p>
           <p className="footer-links">
             <button onClick={() => setSheet({ type: 'policy', kind: 'terms' })}>이용약관</button>
             <button onClick={() => setSheet({ type: 'policy', kind: 'privacy' })}>개인정보 처리방침</button>
@@ -329,9 +329,9 @@ const policyTitle = { terms: '이용약관', privacy: '개인정보 처리방침
 function Policy({ kind }: { kind: 'terms' | 'privacy' }) {
   const sections = {
     terms: [
-      ['서비스 안내', '빠른 GPT 초기화는 블루씨엘이 운영하며, Tibo(@thsottiaux)가 공개한 GPT 사용량 리셋 소식을 10분 간격으로 확인해 알려드리는 무료 참고용 서비스예요. 리셋 기록은 독립 트래커 codex-reset.com의 공개 데이터를 사용해요. OpenAI·X·codex-reset.com과 제휴하거나 승인받은 서비스가 아니에요.'],
-      ['알림의 한계', '게시물 확인 주기, X·토스 서비스 상태, 자동 분류 오류로 알림이 늦거나 누락되거나 잘못 갈 수 있어요. 리셋 여부와 횟수는 OpenAI가 정하며 빠른 GPT 초기화는 이를 보장하지 않아요. 실제 사용량은 GPT에서 확인해 주세요.'],
-      ['알림 해지', '앱의 알림 설정에서 언제든 알림을 끌 수 있어요. 빠른 GPT 초기화는 무료로 제공해요.'],
+      ['서비스 안내', 'GPT 리셋 레이더는 블루씨엘이 운영하며, Tibo(@thsottiaux)가 공개한 GPT 사용량 리셋 소식을 10분 간격으로 확인해 알려드리는 무료 참고용 서비스예요. 리셋 기록은 독립 트래커 codex-reset.com의 공개 데이터를 사용해요. OpenAI·X·codex-reset.com과 제휴하거나 승인받은 서비스가 아니에요.'],
+      ['알림의 한계', '게시물 확인 주기, X·토스 서비스 상태, 자동 분류 오류로 알림이 늦거나 누락되거나 잘못 갈 수 있어요. 리셋 여부와 횟수는 OpenAI가 정하며 GPT 리셋 레이더는 이를 보장하지 않아요. 실제 사용량은 GPT에서 확인해 주세요.'],
+      ['알림 해지', '앱의 알림 설정에서 언제든 알림을 끌 수 있어요. GPT 리셋 레이더는 무료로 제공해요.'],
       ['변경과 문의', '서비스 내용이 바뀌거나 중단될 수 있으며 중요한 변경은 시행 7일 전에 앱에서 알려드려요. 문의: bluecl@bluecl.cloud'],
     ],
     privacy: [
