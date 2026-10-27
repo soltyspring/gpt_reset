@@ -14,9 +14,16 @@ test('홈: 리셋 소식·통계·전체 기록 (모두 무료)', async ({ page 
   await expect(page.locator('main')).not.toContainText('Codex'); // 용어는 GPT로 통일
   await expect(page.locator('.event-row').first()).toContainText('GPT 사용량이 리셋됐어요');
   await expect(page.getByRole('region', { name: '리셋 통계' })).toContainText('최근 90일');
-  expect(await page.locator('.event-row').count()).toBeGreaterThan(3);
+  // 최근 3개만 보이고, 더보기로 나머지를 펼치고 접어요
+  await expect(page.locator('.event-row')).toHaveCount(3);
+  const more = page.getByRole('button', { name: /더보기 \(\d+개\)/ });
+  await expect(more).toHaveAttribute('aria-expanded', 'false');
   await expect(page.getByText(/플러스|결제|이용권/)).toHaveCount(0);
   await page.screenshot({ path: shot('home', info.project.name), fullPage: true, animations: 'disabled' });
+  await more.click();
+  expect(await page.locator('.event-row').count()).toBeGreaterThan(3);
+  await page.getByRole('button', { name: '접기' }).click();
+  await expect(page.locator('.event-row')).toHaveCount(3);
 });
 
 test('상세: 원문과 요약', async ({ page }, info) => {
