@@ -1,0 +1,15 @@
+node_modules/
+dist/
+*.ait
+.env
+.env.*
+!.env.example
+.cache/
+.data/
+certs/
+*.key
+*.crt
+*.pem
+test-results/
+playwright-report/
+*.log
