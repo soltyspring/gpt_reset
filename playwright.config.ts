@@ -15,7 +15,7 @@ export default defineConfig({
     { name: 'mobile', use: { viewport: { width: 375, height: 812 } }, testMatch: /flows/ },
     { name: 'tablet', use: { viewport: { width: 768, height: 1024 } }, testMatch: /flows/, grep: /홈|아래 버튼|화면 순서/ },
     { name: 'desktop', use: { viewport: { width: 1440, height: 900 } }, testMatch: /flows/, grep: /홈/ },
-    // 콘솔 업로드용 세로형 스크린샷 636×1048 (318×524 × 2배)
-    { name: 'store', use: { viewport: { width: 318, height: 524 }, deviceScaleFactor: 2 }, testMatch: /store-shots/ },
+    // 콘솔 업로드용 홍보 스크린샷: 앱 화면은 375×812를 2배로 찍어 틀에 넣어요
+    { name: 'store', use: { viewport: { width: 375, height: 812 }, deviceScaleFactor: 2 }, testMatch: /store-shots/ },
   ],
 });
