@@ -1,4 +1,6 @@
 import { test, expect, type Page, type Browser } from '@playwright/test';
+import { copyFile, mkdir } from 'node:fs/promises';
+import { basename } from 'node:path';
 
 /**
  * 앱인토스 콘솔 업로드용 홍보 스크린샷.
@@ -59,13 +61,23 @@ async function render(browser: Browser, width: number, height: number, html: str
   const p = await ctx.newPage();
   await p.setContent(`<html><head><style>${baseCss}</style></head><body>${html}</body></html>`);
   await p.evaluate(() => Promise.all([...document.images].map(i => i.decode())));
-  await p.screenshot({ path, type: 'png' });
+  // 사진 뷰어 등이 파일을 열고 있으면 바로 덮어쓰지 못해요. 임시 파일에 그린 뒤 풀릴 때까지 다시 복사해요.
+  await mkdir('test-results/store', { recursive: true });
+  const tmp = `test-results/store/${basename(path)}`;
+  await p.screenshot({ path: tmp, type: 'png' });
   await ctx.close();
+  for (let i = 0; ; i++) {
+    try { await copyFile(tmp, path); return; }
+    catch (e) {
+      if (i >= 14) throw new Error(`${path} 파일이 다른 프로그램에 열려 있어 저장하지 못했어요. 닫고 다시 실행해 주세요.`);
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  }
 }
 
 test('콘솔 홍보 스크린샷 (세로 3장 + 가로 1장)', async ({ page, browser, baseURL }) => {
   const screens = await captureScreens(page);
-  const logo = `${baseURL}/logo.svg`;
+  const logo = `${baseURL}/logo.png`;
 
   // 세로형 636×1048: 위에 설명, 아래에 화면이 잘려 들어가는 앱스토어 형식
   for (const [i, s] of SHOTS.entries()) {
@@ -74,7 +86,7 @@ test('콘솔 홍보 스크린샷 (세로 3장 + 가로 1장)', async ({ page, br
         <div class="brand" style="font-size:22px;"><img src="${logo}" width="34" height="34">GPT 리셋 레이더</div>
         <h1 style="font-size:50px;margin-top:22px;">${s.title}</h1>
         <p style="font-size:24px;margin-top:16px;">${s.sub}</p>
-        ${s.align === 'bottom' ? phone(screens[i], 420, 'left:108px;top:392px;', 600, 'bottom') : phone(screens[i], 420, 'left:108px;top:392px;')}
+        ${s.align === 'bottom' ? phone(screens[i], 420, 'left:108px;top:340px;', 640, 'bottom') : phone(screens[i], 420, 'left:108px;top:340px;')}
       </div>`, out(s.file));
   }
 

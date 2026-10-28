@@ -1,7 +1,7 @@
 /** 토스 스타일의 부드러운 3D 느낌 일러스트. 모두 장식용이라 aria-hidden이에요. */
 
 export function Logo({ size = 28 }: { size?: number }) {
-  return <img src={`${import.meta.env.BASE_URL}logo.svg`} width={size} height={size} alt="" aria-hidden="true" className="logo" />;
+  return <img src={`${import.meta.env.BASE_URL}logo.png`} width={size} height={size} alt="" aria-hidden="true" className="logo" />;
 }
 
 /** 다시 채워지는 사용량 게이지 */

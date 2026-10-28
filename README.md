@@ -97,7 +97,7 @@ server/toss.ts      앱인토스 파트너 API(mTLS) · 개발용 mock
 server/store.ts     SQLite (구독자·세션·게시물·이벤트)
 server/app.ts       공개 API (CORS 허용 목록, 요청 제한)
 src/                React 화면, 토스 SDK 연동, SVG 일러스트
-scripts/            poll · admin · 출시 검사 · 로고 렌더링
+scripts/            poll · admin · 출시 검사
 deploy/             systemd · nginx · release.sh
 ```
 

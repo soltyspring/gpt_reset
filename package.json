@@ -17,7 +17,6 @@
     "start": "tsx --env-file-if-exists=.env server/index.ts",
     "poll": "tsx --env-file-if-exists=.env scripts/poll.ts",
     "admin": "tsx --env-file-if-exists=.env scripts/admin.ts",
-    "logo": "node scripts/render-logo.mjs",
     "test": "tsx --test tests/*.test.ts",
     "test:e2e": "playwright test --project=mobile --project=tablet --project=desktop",
     "shots": "playwright test --project=store"
