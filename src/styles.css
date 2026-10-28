@@ -147,7 +147,7 @@ button, label.toggle-row { cursor: pointer; }
 
 /* ── 통계 ── */
 .stats { padding: 18px 8px; }
-.stats dl { display: grid; grid-template-columns: repeat(3, 1fr); margin: 0; }
+.stats dl { display: grid; grid-template-columns: repeat(2, 1fr); margin: 0; }
 .stats dl > div { text-align: center; padding: 0 6px; }
 .stats dl > div + div { border-left: 1px solid var(--grey-100); }
 .stats dt { font-size: 13px; color: var(--grey-600); }

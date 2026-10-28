@@ -10,6 +10,9 @@ const TEMPLATES = {
   planned: import.meta.env.VITE_TOSS_PLAN_TEMPLATE as string | undefined,
 };
 const RECENT_LIMIT = 3;
+/** 리셋 목록 제목: "10월 28일 (수)" (한국 시간) */
+const timeLabel = (iso: string) => new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
+const dayLabel = (iso: string) => new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', month: 'long', day: 'numeric', weekday: 'short' }).format(new Date(iso));
 type SheetKind =
   | { type: 'event'; event: ResetEvent }
   | { type: 'settings' }
@@ -189,8 +192,8 @@ export default function App() {
                 <button className="event-row" onClick={() => setSheet({ type: 'event', event: e })}>
                   <EventIcon kind={e.kind} />
                   <span className="event-texts">
-                    <strong>{koreanCopy(e.kind, e.scope).title}</strong>
-                    <span>{e.scope || '전체'} · {relativeLabel(e.postedAt, now)}</span>
+                    <strong>{dayLabel(e.postedAt)}{e.kind === 'planned' ? ' · 예고' : ''}</strong>
+                    <span>{e.scope || '전체'} · {now - Date.parse(e.postedAt) < 86400_000 ? relativeLabel(e.postedAt, now) : timeLabel(e.postedAt)}</span>
                   </span>
                   <Chevron />
                 </button>
@@ -270,7 +273,6 @@ function Stats({ feed }: { feed: FeedResponse }) {
       <dl>
         <div><dt>최근 90일</dt><dd><b>{s.resets90d}</b>번 리셋</dd></div>
         <div><dt>평균 간격</dt><dd>{s.avgGapDays === null ? '—' : <><b>{s.avgGapDays}</b>일</>}</dd></div>
-        <div><dt>알림까지</dt><dd>{s.avgDelayMin === null ? <><b>10</b>분 이내</> : <><b>{s.avgDelayMin}</b>분</>}</dd></div>
       </dl>
     </section>
   );
