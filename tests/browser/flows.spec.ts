@@ -18,8 +18,12 @@ test('홈: 리셋 소식·통계·전체 기록 (모두 무료)', async ({ page 
   await expect(page.getByText(/확인했어요|분마다|codex-reset\.com/)).toHaveCount(0);
   await expect(page.locator('main')).not.toContainText('Codex'); // 용어는 GPT로 통일
   await expect(page.locator('main')).not.toContainText(/tibo|thsottiaux/i);
-  await expect(page.locator('.event-row').first()).toContainText('GPT 사용량이 리셋됐어요');
+  // 목록 제목은 날짜라 줄마다 달라요
+  await expect(page.locator('.event-row').first()).toContainText(/\d+월 \d+일/);
+  const titles = await page.locator('.event-row strong').allInnerTexts();
+  expect(new Set(titles).size).toBe(titles.length);
   await expect(page.getByRole('region', { name: '리셋 통계' })).toContainText('최근 90일');
+  await expect(page.getByRole('region', { name: '리셋 통계' })).not.toContainText(/알림까지|알림 속도/);
   // 최근 3개만 보이고, 더보기로 나머지를 펼치고 접어요
   await expect(page.locator('.event-row')).toHaveCount(3);
   const more = page.getByRole('button', { name: /더보기 \(\d+개\)/ });
