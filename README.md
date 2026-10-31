@@ -1,4 +1,4 @@
-# gpt_reset · GPT 리셋 레이더
+# gpt_reset · GPT 초기화 레이더
 
 OpenAI Codex 팀의 Tibo([@thsottiaux](https://x.com/thsottiaux))가 X에 사용량 리셋 소식을 올리면 토스 메시지로 알려 주는 앱인토스 미니앱이에요. 10분마다 새 게시물을 확인해요.
 

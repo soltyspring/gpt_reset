@@ -10,9 +10,16 @@ const TEMPLATES = {
   planned: import.meta.env.VITE_TOSS_PLAN_TEMPLATE as string | undefined,
 };
 const RECENT_LIMIT = 3;
+/** 대상 표기는 항상 "모든 사용자"로 보여 줘요. */
+const SCOPE = '모든 사용자';
 /** 초기화 목록 제목: "10월 28일 (수)" (한국 시간) */
 const timeLabel = (iso: string) => new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
-const dayLabel = (iso: string) => new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', month: 'long', day: 'numeric', weekday: 'short' }).format(new Date(iso));
+const kstYear = (d: Date) => new Intl.DateTimeFormat('en', { timeZone: 'Asia/Seoul', year: 'numeric' }).format(d);
+const dayLabel = (iso: string) => {
+  const d = new Date(iso);
+  const sameYear = kstYear(d) === kstYear(new Date());
+  return new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', ...(sameYear ? {} : { year: 'numeric' }), month: 'long', day: 'numeric', weekday: 'short' }).format(d);
+};
 type SheetKind =
   | { type: 'event'; event: ResetEvent }
   | { type: 'settings' }
@@ -33,13 +40,8 @@ export default function App() {
   const [feedError, setFeedError] = useState(false);
   const [sub, setSub] = useState<SubscriptionState | null>(null);
   const [busy, setBusy] = useState(false);
-  /** 알림을 받기 전, 홈 화면 스위치로 고른 알림 종류 */
-  const [draft, setDraft] = useState<SubscriptionState['types']>({ reset: true, planned: false });
   /** 최근 초기화 소식은 3개만 보이고 나머지는 더보기로 펼쳐요. */
   const [showAllEvents, setShowAllEvents] = useState(false);
-  /** 저장 중인 최신 선택과 저장 순서 */
-  const latestTypes = useRef<SubscriptionState['types'] | null>(null);
-  const saveQueue = useRef<Promise<unknown>>(Promise.resolve());
   const [toast, setToast] = useState<string | null>(null);
   const [sheet, setSheet] = useState<SheetKind>(null);
   const sheetRef = useRef<SheetKind>(null);
@@ -97,46 +99,13 @@ export default function App() {
       const next = await api.save(types);
       setSub(next);
       haptic('success');
-      showToast(types.reset && types.planned ? '초기화 예고와 초기화 모두 알려드릴게요' : types.planned ? '초기화 예고를 알려드릴게요' : '이제 초기화되면 바로 알려드릴게요');
+      showToast('이제 초기화되면 바로 알려드릴게요');
       return true;
     } catch (e) {
       haptic('error');
       showToast(e instanceof ApiError ? e.message : '잠시 후 다시 시도해 주세요');
       return false;
     } finally { setBusy(false); }
-  }
-
-  /**
-   * 받는 중일 때 알림 종류 바꾸기. 새로 켜는 알림은 동의부터 받아요.
-   * 저장은 순서대로 처리해서, 스위치를 빠르게 연달아 눌러도 마지막 선택이 남아요.
-   */
-  async function changeTypes(next: SubscriptionState['types'], base = latestTypes.current ?? sub?.types) {
-    if (!sub?.subscribed || !base) return false;
-    const added = { reset: next.reset && !base.reset, planned: next.planned && !base.planned };
-    if (added.reset || added.planned) {
-      if (busy) return false;
-      setBusy(true);
-      try { if (!(await agreeFor(added))) return false; } finally { setBusy(false); }
-    }
-    latestTypes.current = next;
-    const run = saveQueue.current.then(() => saveTypes(next));
-    saveQueue.current = run.catch(() => false);
-    const ok = await run;
-    if (latestTypes.current === next) latestTypes.current = null;
-    if (!ok) latestTypes.current = null;
-    return ok;
-  }
-
-  /**
-   * 홈 화면 스위치. 알림을 받기 전에는 고르기만 하고(아래 버튼으로 시작),
-   * 이미 받는 중이면 바로 설정을 바꿔요.
-   */
-  async function toggleType(kind: 'reset' | 'planned', on: boolean) {
-    if (!sub?.subscribed) { if (!busy) setDraft(d => ({ ...d, [kind]: on })); return; }
-    const base = latestTypes.current ?? sub.types;
-    const next = { ...base, [kind]: on };
-    const ok = await changeTypes(next, base);
-    if (ok && (next.reset || next.planned)) showToast(`${kind === 'reset' ? '초기화 완료' : '초기화 예고'} 알림을 ${on ? '켰어요' : '껐어요'}`);
   }
 
   async function saveTypes(types: SubscriptionState['types']) {
@@ -157,7 +126,7 @@ export default function App() {
     showToast((await shareApp()) ? (native ? '공유했어요' : '소개 문구를 복사했어요') : '공유하지 못했어요');
   }
 
-  const events = feed?.events ?? [];
+  const events = [...(feed?.events ?? [])].sort((a, b) => Date.parse(b.postedAt) - Date.parse(a.postedAt));
   const latest = events.find(e => e.kind === 'reset');
   const fresh = !!latest && now - Date.parse(latest.postedAt) < 24 * 3600_000;
   const subscribed = !!sub?.subscribed;
@@ -165,7 +134,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="top-bar">
-        <Logo size={26} /><span className="brand-name">GPT 리셋 레이더</span>
+        <Logo size={26} /><span className="brand-name">GPT 초기화 레이더</span>
       </header>
 
       <main>
@@ -173,19 +142,17 @@ export default function App() {
           <HeroGauge fresh={fresh} />
           <p className="kicker">이제 귀찮게 확인하지 않아도 돼요</p>
           <h1 id="hero-title">{fresh ? <>GPT 사용량이<br />초기화됐어요</> : <>GPT 사용량이 초기화되면<br />바로 알려드릴게요</>}</h1>
-          {fresh && latest && <p className="hero-sub">{`${relativeLabel(latest.postedAt, now)} · ${latest.scope || '전체'} 대상이에요`}</p>}
         </section>
-
-        {feed && <Stats feed={feed} />}
 
         <section className="card" aria-labelledby="how-title">
           <h2 id="how-title" className="section-title">이렇게 알려드려요</h2>
           <ol className="steps">
-            <Step icon="watch" title="초기화 소식을 살펴봐요" text="OpenAI가 공개하는 초기화 소식을 확인해요." />
             <Step icon="detect" title="초기화 공지만 골라요" text="사용량 초기화 소식일 때만 알림을 보내요." />
             <Step icon="notify" title="토스로 알려드려요" text="바쁘셔도 놓치지 않게 바로 보내드려요." />
           </ol>
         </section>
+
+        {feed && <Stats feed={feed} />}
 
         <section className="card" aria-labelledby="recent-title">
           <h2 id="recent-title" className="section-title">최근 초기화 소식</h2>
@@ -199,7 +166,7 @@ export default function App() {
                   <EventIcon kind={e.kind} />
                   <span className="event-texts">
                     <strong>{dayLabel(e.postedAt)}{e.kind === 'planned' ? ' · 예고' : ''}</strong>
-                    <span>{e.scope || '전체'} · {now - Date.parse(e.postedAt) < 86400_000 ? relativeLabel(e.postedAt, now) : timeLabel(e.postedAt)}</span>
+                    <span>{SCOPE} · {now - Date.parse(e.postedAt) < 86400_000 ? relativeLabel(e.postedAt, now) : timeLabel(e.postedAt)}</span>
                   </span>
                   <Chevron />
                 </button>
@@ -219,19 +186,8 @@ export default function App() {
           <button className="pill-button" onClick={share}>공유하기</button>
         </section>
 
-        <section className="card alerts" aria-labelledby="alerts-title">
-          <h2 id="alerts-title" className="section-title">받을 알림</h2>
-          <div className="alert-toggles">
-            <Toggle label="초기화 완료 알림" desc="사용량이 초기화되면 바로 알려드려요" checked={subscribed ? !!sub?.types.reset : draft.reset} disabled={busy}
-              onChange={v => void toggleType('reset', v)} />
-            <Toggle label="초기화 예고 알림" desc="초기화가 예고되면 미리 알려드려요" checked={subscribed ? !!sub?.types.planned : draft.planned} disabled={busy}
-              onChange={v => void toggleType('planned', v)} />
-          </div>
-          <p className="small alerts-note">{subscribed ? '하나만 켜도 되고, 둘 다 켜도 돼요' : '받을 알림을 고른 뒤 아래 버튼을 눌러 주세요'}</p>
-        </section>
-
         <footer className="footer">
-          <p>GPT 리셋 레이더는 OpenAI·X와 관련 없는 개인 서비스예요. 공개 게시물을 바탕으로 알려드리며, 실제 사용량은 GPT에서 확인해 주세요.</p>
+          <p>GPT 초기화 레이더는 OpenAI·X와 관련 없는 개인 서비스예요. 공개 게시물을 바탕으로 알려드리며, 실제 사용량은 GPT에서 확인해 주세요.</p>
           <p className="footer-links">
             <button onClick={() => setSheet({ type: 'policy', kind: 'terms' })}>이용약관</button>
             <button onClick={() => setSheet({ type: 'policy', kind: 'privacy' })}>개인정보 처리방침</button>
@@ -248,14 +204,13 @@ export default function App() {
 
       {toast && <div className="toast" role="status">{toast}</div>}
 
-      {sheet?.type === 'event' && <Sheet title={koreanCopy(sheet.event.kind, sheet.event.scope).title} onClose={() => setSheet(null)}><EventDetail event={sheet.event} /></Sheet>}
+      {sheet?.type === 'event' && <Sheet title={koreanCopy(sheet.event.kind, SCOPE).title} onClose={() => setSheet(null)}><EventDetail event={sheet.event} /></Sheet>}
       {sheet?.type === 'setup' && (
         <Sheet title="알림 설정" onClose={() => setSheet(null)}>
-          <Setup draft={draft} busy={busy} onPick={(kind, v) => setDraft(d => ({ ...d, [kind]: v }))}
-            onStart={async () => { if (await subscribe(draft)) setSheet(null); }} />
+          <Setup busy={busy} onStart={async () => { if (await subscribe({ reset: true, planned: true })) setSheet(null); }} />
         </Sheet>
       )}
-      {sheet?.type === 'settings' && sub && <Sheet title="알림 설정" onClose={() => setSheet(null)}><Settings sub={sub} onChange={t => void changeTypes(t)} /></Sheet>}
+      {sheet?.type === 'settings' && sub && <Sheet title="알림 설정" onClose={() => setSheet(null)}><Settings sub={sub} onOff={() => void saveTypes({ reset: false, planned: false })} /></Sheet>}
       {sheet?.type === 'policy' && <Sheet title={policyTitle[sheet.kind]} onClose={() => setSheet(null)}><Policy kind={sheet.kind} /></Sheet>}
     </div>
   );
@@ -283,10 +238,10 @@ function EventDetail({ event }: { event: ResetEvent }) {
   return (
     <div className="detail">
       <span className={`badge ${event.kind}`}>{event.kind === 'reset' ? '초기화 완료' : '초기화 예고'}</span>
-      <h2 className="detail-title">{koreanCopy(event.kind, event.scope).title}</h2>
-      <p className="detail-summary">{koreanCopy(event.kind, event.scope).summary}</p>
+      <h2 className="detail-title">{koreanCopy(event.kind, SCOPE).title}</h2>
+      <p className="detail-summary">{koreanCopy(event.kind, SCOPE).summary}</p>
       <dl className="facts">
-        <div><dt>대상</dt><dd>{event.scope || '전체'}</dd></div>
+        <div><dt>대상</dt><dd>{SCOPE}</dd></div>
         <div><dt>게시 시각</dt><dd>{kstLabel(event.postedAt)}</dd></div>
         {event.notifiedCount > 0 && <div><dt>알림 받은 사람</dt><dd>{event.notifiedCount.toLocaleString('ko-KR')}명</dd></div>}
       </dl>
@@ -299,41 +254,26 @@ function EventDetail({ event }: { event: ResetEvent }) {
   );
 }
 
-/** 알림을 받기 전: 받을 알림을 고르고 시작해요. */
-function Setup({ draft, busy, onPick, onStart }: { draft: SubscriptionState['types']; busy: boolean; onPick: (kind: 'reset' | 'planned', v: boolean) => void; onStart: () => void }) {
-  const none = !draft.reset && !draft.planned;
+/** 알림을 받기 전: 한 번에 시작해요(초기화 완료·예고 알림을 함께 받아요). */
+function Setup({ busy, onStart }: { busy: boolean; onStart: () => void }) {
   return (
     <div className="settings setup">
       <h2 className="detail-title">초기화되면 가장 빠르게<br />알려드릴게요</h2>
-      <p className="detail-summary">받고 싶은 알림을 골라 주세요. 하나만 골라도 돼요.</p>
-      <Toggle label="초기화 완료 알림" desc="사용량이 초기화되면 바로 알려드려요" checked={draft.reset} disabled={busy} onChange={v => onPick('reset', v)} />
-      <Toggle label="초기화 예고 알림" desc="초기화가 예고되면 미리 알려드려요" checked={draft.planned} disabled={busy} onChange={v => onPick('planned', v)} />
-      <button className="cta full" onClick={onStart} disabled={busy || none} aria-busy={busy}>
-        {busy ? <span className="spinner" aria-label="연결 중" /> : none ? '받을 알림을 골라 주세요' : '알림 받기'}
+      <p className="detail-summary">초기화 소식과 예고 소식을 토스 알림으로 보내드려요.</p>
+      <button className="cta full" onClick={onStart} disabled={busy} aria-busy={busy}>
+        {busy ? <span className="spinner" aria-label="연결 중" /> : '알림 받기'}
       </button>
     </div>
   );
 }
 
-function Settings({ sub, onChange }: { sub: SubscriptionState; onChange: (t: SubscriptionState['types']) => void }) {
+function Settings({ sub, onOff }: { sub: SubscriptionState; onOff: () => void }) {
   return (
     <div className="settings">
       <h2 className="detail-title">알림 설정</h2>
-      <Toggle label="초기화 완료 알림" desc="사용량이 초기화되면 바로 알려드려요" checked={sub.types.reset} onChange={v => onChange({ ...sub.types, reset: v })} />
-      <Toggle label="초기화 예고 알림" desc="초기화가 예고되면 미리 알려드려요" checked={sub.types.planned} onChange={v => onChange({ ...sub.types, planned: v })} />
-      {sub.since && <p className="small">{kstLabel(sub.since)}부터 알림을 받고 있어요</p>}
-      <button className="text-button danger" onClick={() => onChange({ reset: false, planned: false })}>알림 끄기</button>
+      <p className="detail-summary">{sub.since ? `${kstLabel(sub.since)}부터 ` : ''}초기화 소식을 받고 있어요.</p>
+      <button className="text-button danger" onClick={onOff}>알림 끄기</button>
     </div>
-  );
-}
-
-function Toggle({ label, desc, checked, disabled, onChange }: { label: string; desc: string; checked: boolean; disabled?: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <label className={`toggle-row ${disabled ? 'is-disabled' : ''}`}>
-      <span><strong>{label}</strong><span>{desc}</span></span>
-      <input type="checkbox" role="switch" checked={checked} disabled={disabled} onChange={e => onChange(e.target.checked)} />
-      <span className="switch" aria-hidden="true" />
-    </label>
   );
 }
 
@@ -362,9 +302,9 @@ const policyTitle = { terms: '이용약관', privacy: '개인정보 처리방침
 function Policy({ kind }: { kind: 'terms' | 'privacy' }) {
   const sections = {
     terms: [
-      ['서비스 안내', 'GPT 리셋 레이더는 블루씨엘이 운영하며, OpenAI가 공개한 GPT 사용량 초기화 소식을 10분 간격으로 확인해 알려드리는 무료 참고용 서비스예요. 초기화 기록은 독립 트래커 codex-reset.com의 공개 데이터를 사용해요. OpenAI·X·codex-reset.com과 제휴하거나 승인받은 서비스가 아니에요.'],
-      ['알림의 한계', '게시물 확인 주기, X·토스 서비스 상태, 자동 분류 오류로 알림이 늦거나 누락되거나 잘못 갈 수 있어요. 초기화 여부와 횟수는 OpenAI가 정하며 GPT 리셋 레이더는 이를 보장하지 않아요. 실제 사용량은 GPT에서 확인해 주세요.'],
-      ['알림 해지', '앱의 알림 설정에서 언제든 알림을 끌 수 있어요. GPT 리셋 레이더는 무료로 제공해요.'],
+      ['서비스 안내', 'GPT 초기화 레이더는 블루씨엘이 운영하며, OpenAI가 공개한 GPT 사용량 초기화 소식을 10분 간격으로 확인해 알려드리는 무료 참고용 서비스예요. 초기화 기록은 독립 트래커 codex-reset.com의 공개 데이터를 사용해요. OpenAI·X·codex-reset.com과 제휴하거나 승인받은 서비스가 아니에요.'],
+      ['알림의 한계', '게시물 확인 주기, X·토스 서비스 상태, 자동 분류 오류로 알림이 늦거나 누락되거나 잘못 갈 수 있어요. 초기화 여부와 횟수는 OpenAI가 정하며 GPT 초기화 레이더는 이를 보장하지 않아요. 실제 사용량은 GPT에서 확인해 주세요.'],
+      ['알림 해지', '앱의 알림 설정에서 언제든 알림을 끌 수 있어요. GPT 초기화 레이더는 무료로 제공해요.'],
       ['변경과 문의', '서비스 내용이 바뀌거나 중단될 수 있으며 중요한 변경은 시행 7일 전에 앱에서 알려드려요. 문의: bluecl@bluecl.cloud'],
     ],
     privacy: [

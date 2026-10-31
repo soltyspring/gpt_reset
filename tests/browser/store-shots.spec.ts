@@ -14,7 +14,7 @@ const SHOTS = [
   { file: 'screenshot-1', title: '귀찮게 확인하지<br>않아도 돼요', sub: 'GPT 사용량이 초기화되면 바로 알려드려요', align: 'top' },
   { file: 'screenshot-2', title: '초기화 소식만<br>모아 봐요', sub: '지난 초기화 날짜와 평균 간격까지 한눈에', align: 'top' },
   // 알림 설정 창은 화면 아래에 떠서, 아래쪽을 보여 주고 휴대폰 아랫부분까지 그려요
-  { file: 'screenshot-3', title: '받고 싶은 알림만<br>골라요', sub: '초기화 완료, 초기화 예고 중 하나만 켜도 돼요', align: 'bottom' },
+  { file: 'screenshot-3', title: '버튼 한 번이면<br>끝이에요', sub: '초기화 소식과 예고를 토스 알림으로 받아요', align: 'bottom' },
 ] as const;
 
 const FONT = `'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif`;
@@ -32,7 +32,6 @@ async function captureScreens(page: Page) {
   await page.getByRole('button', { name: '초기화되면 가장 빠르게 알려드릴까요?' }).click();
   const sheet = page.getByRole('dialog', { name: '알림 설정' });
   await expect(sheet).toBeVisible();
-  await sheet.getByText('초기화 예고 알림').click(); // 두 알림을 모두 켠 모습
   const setup = await page.screenshot(opts);
   return [home, list, setup].map(b => `data:image/png;base64,${b.toString('base64')}`);
 }
@@ -83,7 +82,7 @@ test('콘솔 홍보 스크린샷 (세로 3장 + 가로 1장)', async ({ page, br
   for (const [i, s] of SHOTS.entries()) {
     await render(browser, 636, 1048, `
       <div class="canvas" style="width:636px;height:1048px;padding:64px 56px 0;">
-        <div class="brand" style="font-size:22px;"><img src="${logo}" width="34" height="34">GPT 리셋 레이더</div>
+        <div class="brand" style="font-size:22px;"><img src="${logo}" width="34" height="34">GPT 초기화 레이더</div>
         <h1 style="font-size:50px;margin-top:22px;">${s.title}</h1>
         <p style="font-size:24px;margin-top:16px;">${s.sub}</p>
         ${s.align === 'bottom' ? phone(screens[i], 420, 'left:108px;top:340px;', 640, 'bottom') : phone(screens[i], 420, 'left:108px;top:340px;')}
@@ -94,7 +93,7 @@ test('콘솔 홍보 스크린샷 (세로 3장 + 가로 1장)', async ({ page, br
   await render(browser, 1504, 741, `
     <div class="canvas" style="width:1504px;height:741px;padding:0 0 0 88px;background:linear-gradient(120deg,#eaf3ff 0%,#f6f9ff 60%,#ffffff 100%);">
       <div style="position:absolute;left:88px;top:50%;transform:translateY(-50%);width:520px;">
-        <div class="brand" style="font-size:24px;"><img src="${logo}" width="40" height="40">GPT 리셋 레이더</div>
+        <div class="brand" style="font-size:24px;"><img src="${logo}" width="40" height="40">GPT 초기화 레이더</div>
         <h1 style="font-size:56px;margin-top:24px;">GPT 사용량 초기화,<br>이제 기다리지 마세요</h1>
         <p style="font-size:26px;margin-top:20px;">초기화되면 토스 알림으로 바로 알려드려요</p>
       </div>

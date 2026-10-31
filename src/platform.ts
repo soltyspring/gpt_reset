@@ -63,7 +63,7 @@ export async function createAuthCode(): Promise<string | null> {
 
 /** 친구에게 앱 공유 */
 export async function shareApp() {
-  const message = 'GPT 사용량이 초기화되면 토스로 바로 알려줘요. GPT 리셋 레이더';
+  const message = 'GPT 사용량이 초기화되면 토스로 바로 알려줘요. GPT 초기화 레이더';
   if (isNativeToss()) {
     try {
       const link = await Share.createLink({ path: 'intoss://tibo' });
@@ -71,6 +71,6 @@ export async function shareApp() {
       return true;
     } catch { return false; }
   }
-  if (typeof navigator.share === 'function') { try { await navigator.share({ title: 'GPT 리셋 레이더', text: message }); return true; } catch { return false; } }
+  if (typeof navigator.share === 'function') { try { await navigator.share({ title: 'GPT 초기화 레이더', text: message }); return true; } catch { return false; } }
   try { await navigator.clipboard.writeText(message); return true; } catch { return false; }
 }
