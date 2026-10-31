@@ -180,3 +180,6 @@ button, label.toggle-row { cursor: pointer; }
 
 /* 첫 화면 한마디 */
 .kicker { display: inline-block; margin: 4px 0 10px; padding: 6px 12px; border-radius: 999px; background: var(--blue-pale); color: var(--blue-dark); font-size: 15px; font-weight: 700; letter-spacing: -.02em; }
+
+/* 첫 화면 제목은 좁은 화면에서도 한 줄 */
+.hero h1 { white-space: nowrap; font-size: clamp(20px, 6.4vw, 26px); }

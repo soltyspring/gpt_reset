@@ -10,6 +10,10 @@ test('홈: 초기화 소식·통계·전체 기록 (모두 무료)', async ({ pa
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('초기화됐어요');
   // 첫 화면은 같은 말을 반복하지 않아요("알려드"는 제목에서만 한 번까지)
+  // 제목은 한 줄
+  const h1 = page.getByRole('heading', { level: 1 });
+  const lh = await h1.evaluate(el => parseFloat(getComputedStyle(el).lineHeight));
+  expect((await h1.boundingBox())!.height).toBeLessThan(lh * 1.5);
   const heroText = await page.locator('.hero').innerText();
   expect(heroText).not.toContain('대상이에요');
   await expect(page.locator('main')).not.toContainText('유료 플랜');

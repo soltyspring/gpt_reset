@@ -141,7 +141,7 @@ export default function App() {
         <section className="hero" aria-labelledby="hero-title">
           <HeroGauge fresh={fresh} />
           <p className="kicker">이제 귀찮게 확인하지 않아도 돼요</p>
-          <h1 id="hero-title">{fresh ? <>GPT 사용량이<br />초기화됐어요</> : <>GPT 사용량이 초기화되면<br />바로 알려드릴게요</>}</h1>
+          <h1 id="hero-title">{fresh ? <>GPT 사용량이 초기화됐어요</> : <>GPT 사용량이 초기화되면<br />바로 알려드릴게요</>}</h1>
         </section>
 
         <section className="card" aria-labelledby="how-title">
