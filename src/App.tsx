@@ -10,7 +10,7 @@ const TEMPLATES = {
   planned: import.meta.env.VITE_TOSS_PLAN_TEMPLATE as string | undefined,
 };
 const RECENT_LIMIT = 3;
-/** 리셋 목록 제목: "10월 28일 (수)" (한국 시간) */
+/** 초기화 목록 제목: "10월 28일 (수)" (한국 시간) */
 const timeLabel = (iso: string) => new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
 const dayLabel = (iso: string) => new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', month: 'long', day: 'numeric', weekday: 'short' }).format(new Date(iso));
 type SheetKind =
@@ -35,7 +35,7 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   /** 알림을 받기 전, 홈 화면 스위치로 고른 알림 종류 */
   const [draft, setDraft] = useState<SubscriptionState['types']>({ reset: true, planned: false });
-  /** 최근 리셋 소식은 3개만 보이고 나머지는 더보기로 펼쳐요. */
+  /** 최근 초기화 소식은 3개만 보이고 나머지는 더보기로 펼쳐요. */
   const [showAllEvents, setShowAllEvents] = useState(false);
   /** 저장 중인 최신 선택과 저장 순서 */
   const latestTypes = useRef<SubscriptionState['types'] | null>(null);
@@ -97,7 +97,7 @@ export default function App() {
       const next = await api.save(types);
       setSub(next);
       haptic('success');
-      showToast(types.reset && types.planned ? '리셋 예고와 리셋 모두 알려드릴게요' : types.planned ? '리셋 예고를 알려드릴게요' : '이제 리셋되면 바로 알려드릴게요');
+      showToast(types.reset && types.planned ? '초기화 예고와 초기화 모두 알려드릴게요' : types.planned ? '초기화 예고를 알려드릴게요' : '이제 초기화되면 바로 알려드릴게요');
       return true;
     } catch (e) {
       haptic('error');
@@ -136,7 +136,7 @@ export default function App() {
     const base = latestTypes.current ?? sub.types;
     const next = { ...base, [kind]: on };
     const ok = await changeTypes(next, base);
-    if (ok && (next.reset || next.planned)) showToast(`${kind === 'reset' ? '리셋 완료' : '리셋 예고'} 알림을 ${on ? '켰어요' : '껐어요'}`);
+    if (ok && (next.reset || next.planned)) showToast(`${kind === 'reset' ? '초기화 완료' : '초기화 예고'} 알림을 ${on ? '켰어요' : '껐어요'}`);
   }
 
   async function saveTypes(types: SubscriptionState['types']) {
@@ -172,19 +172,25 @@ export default function App() {
         <section className="hero" aria-labelledby="hero-title">
           <HeroGauge fresh={fresh} />
           <p className="kicker">이제 귀찮게 확인하지 않아도 돼요</p>
-          <h1 id="hero-title">{fresh ? <>GPT 사용량이<br />리셋됐어요</> : <>GPT 사용량이 리셋되면<br />바로 알려드릴게요</>}</h1>
-          <p className="hero-sub">
-            {fresh && latest ? `${relativeLabel(latest.postedAt, now)} · ${latest.scope || '전체'} 대상이에요`
-              : latest ? `마지막 리셋 · ${relativeLabel(latest.postedAt, now)}` : '아직 리셋 소식이 없어요'}
-          </p>
+          <h1 id="hero-title">{fresh ? <>GPT 사용량이<br />초기화됐어요</> : <>GPT 사용량이 초기화되면<br />바로 알려드릴게요</>}</h1>
+          {fresh && latest && <p className="hero-sub">{`${relativeLabel(latest.postedAt, now)} · ${latest.scope || '전체'} 대상이에요`}</p>}
         </section>
 
         {feed && <Stats feed={feed} />}
 
+        <section className="card" aria-labelledby="how-title">
+          <h2 id="how-title" className="section-title">이렇게 알려드려요</h2>
+          <ol className="steps">
+            <Step icon="watch" title="초기화 소식을 살펴봐요" text="OpenAI가 공개하는 초기화 소식을 확인해요." />
+            <Step icon="detect" title="초기화 공지만 골라요" text="사용량 초기화 소식일 때만 알림을 보내요." />
+            <Step icon="notify" title="토스로 알려드려요" text="바쁘셔도 놓치지 않게 바로 보내드려요." />
+          </ol>
+        </section>
+
         <section className="card" aria-labelledby="recent-title">
-          <h2 id="recent-title" className="section-title">최근 리셋 소식</h2>
+          <h2 id="recent-title" className="section-title">최근 초기화 소식</h2>
           {!feed && !feedError && <div className="skeleton-list" aria-label="불러오는 중"><span /><span /></div>}
-          {feed && events.length === 0 && <div className="empty"><EmptyMoon /><p>아직 새 리셋 소식이 없어요</p></div>}
+          {feed && events.length === 0 && <div className="empty"><EmptyMoon /><p>아직 새 초기화 소식이 없어요</p></div>}
           {feedError && !feed && <div className="empty"><p>소식을 불러오지 못했어요</p><button className="text-button" onClick={loadFeed}>다시 불러오기</button></div>}
           <ul className="event-list">
             {(showAllEvents ? events : events.slice(0, RECENT_LIMIT)).map(e => (
@@ -208,26 +214,17 @@ export default function App() {
           )}
         </section>
 
-        <section className="card" aria-labelledby="how-title">
-          <h2 id="how-title" className="section-title">이렇게 알려드려요</h2>
-          <ol className="steps">
-            <Step icon="watch" title="리셋 소식을 살펴봐요" text="OpenAI가 공개하는 리셋 소식을 확인해요." />
-            <Step icon="detect" title="리셋 공지만 골라요" text="사용량 리셋 소식일 때만 알림을 보내요." />
-            <Step icon="notify" title="토스로 알려드려요" text="바쁘셔도 놓치지 않게 바로 보내드려요." />
-          </ol>
-        </section>
-
         <section className="card share-card">
-          <div><strong>GPT 쓰는 친구가 있나요?</strong><span>리셋 소식을 같이 받아 보세요</span></div>
+          <div><strong>GPT 쓰는 친구가 있나요?</strong><span>초기화 소식을 같이 받아 보세요</span></div>
           <button className="pill-button" onClick={share}>공유하기</button>
         </section>
 
         <section className="card alerts" aria-labelledby="alerts-title">
           <h2 id="alerts-title" className="section-title">받을 알림</h2>
           <div className="alert-toggles">
-            <Toggle label="리셋 완료 알림" desc="사용량이 리셋되면 바로 알려드려요" checked={subscribed ? !!sub?.types.reset : draft.reset} disabled={busy}
+            <Toggle label="초기화 완료 알림" desc="사용량이 초기화되면 바로 알려드려요" checked={subscribed ? !!sub?.types.reset : draft.reset} disabled={busy}
               onChange={v => void toggleType('reset', v)} />
-            <Toggle label="리셋 예고 알림" desc="리셋이 예고되면 미리 알려드려요" checked={subscribed ? !!sub?.types.planned : draft.planned} disabled={busy}
+            <Toggle label="초기화 예고 알림" desc="초기화가 예고되면 미리 알려드려요" checked={subscribed ? !!sub?.types.planned : draft.planned} disabled={busy}
               onChange={v => void toggleType('planned', v)} />
           </div>
           <p className="small alerts-note">{subscribed ? '하나만 켜도 되고, 둘 다 켜도 돼요' : '받을 알림을 고른 뒤 아래 버튼을 눌러 주세요'}</p>
@@ -246,7 +243,7 @@ export default function App() {
       <div className="bottom-cta">
         {subscribed
           ? <button className="cta weak" onClick={() => setSheet({ type: 'settings' })}><BellOn /> 알림 받는 중</button>
-          : <button className="cta" onClick={() => setSheet({ type: 'setup' })}><BellOn /> 리셋되면 가장 빠르게 알려드릴까요?</button>}
+          : <button className="cta" onClick={() => setSheet({ type: 'setup' })}><BellOn /> 초기화되면 가장 빠르게 알려드릴까요?</button>}
       </div>
 
       {toast && <div className="toast" role="status">{toast}</div>}
@@ -269,9 +266,9 @@ function Stats({ feed }: { feed: FeedResponse }) {
   const s = feed.stats;
   if (!s || (s.resets90d === 0 && s.avgGapDays === null)) return null;
   return (
-    <section className="card stats" aria-label="리셋 통계">
+    <section className="card stats" aria-label="초기화 통계">
       <dl>
-        <div><dt>최근 90일</dt><dd><b>{s.resets90d}</b>번 리셋</dd></div>
+        <div><dt>최근 90일</dt><dd><b>{s.resets90d}</b>번 초기화</dd></div>
         <div><dt>평균 간격</dt><dd>{s.avgGapDays === null ? '—' : <><b>{s.avgGapDays}</b>일</>}</dd></div>
       </dl>
     </section>
@@ -285,7 +282,7 @@ function Step({ icon, title, text }: { icon: 'watch' | 'detect' | 'notify'; titl
 function EventDetail({ event }: { event: ResetEvent }) {
   return (
     <div className="detail">
-      <span className={`badge ${event.kind}`}>{event.kind === 'reset' ? '리셋 완료' : '리셋 예고'}</span>
+      <span className={`badge ${event.kind}`}>{event.kind === 'reset' ? '초기화 완료' : '초기화 예고'}</span>
       <h2 className="detail-title">{koreanCopy(event.kind, event.scope).title}</h2>
       <p className="detail-summary">{koreanCopy(event.kind, event.scope).summary}</p>
       <dl className="facts">
@@ -307,10 +304,10 @@ function Setup({ draft, busy, onPick, onStart }: { draft: SubscriptionState['typ
   const none = !draft.reset && !draft.planned;
   return (
     <div className="settings setup">
-      <h2 className="detail-title">리셋되면 가장 빠르게<br />알려드릴게요</h2>
+      <h2 className="detail-title">초기화되면 가장 빠르게<br />알려드릴게요</h2>
       <p className="detail-summary">받고 싶은 알림을 골라 주세요. 하나만 골라도 돼요.</p>
-      <Toggle label="리셋 완료 알림" desc="사용량이 리셋되면 바로 알려드려요" checked={draft.reset} disabled={busy} onChange={v => onPick('reset', v)} />
-      <Toggle label="리셋 예고 알림" desc="리셋이 예고되면 미리 알려드려요" checked={draft.planned} disabled={busy} onChange={v => onPick('planned', v)} />
+      <Toggle label="초기화 완료 알림" desc="사용량이 초기화되면 바로 알려드려요" checked={draft.reset} disabled={busy} onChange={v => onPick('reset', v)} />
+      <Toggle label="초기화 예고 알림" desc="초기화가 예고되면 미리 알려드려요" checked={draft.planned} disabled={busy} onChange={v => onPick('planned', v)} />
       <button className="cta full" onClick={onStart} disabled={busy || none} aria-busy={busy}>
         {busy ? <span className="spinner" aria-label="연결 중" /> : none ? '받을 알림을 골라 주세요' : '알림 받기'}
       </button>
@@ -322,8 +319,8 @@ function Settings({ sub, onChange }: { sub: SubscriptionState; onChange: (t: Sub
   return (
     <div className="settings">
       <h2 className="detail-title">알림 설정</h2>
-      <Toggle label="리셋 완료 알림" desc="사용량이 리셋되면 바로 알려드려요" checked={sub.types.reset} onChange={v => onChange({ ...sub.types, reset: v })} />
-      <Toggle label="리셋 예고 알림" desc="리셋이 예고되면 미리 알려드려요" checked={sub.types.planned} onChange={v => onChange({ ...sub.types, planned: v })} />
+      <Toggle label="초기화 완료 알림" desc="사용량이 초기화되면 바로 알려드려요" checked={sub.types.reset} onChange={v => onChange({ ...sub.types, reset: v })} />
+      <Toggle label="초기화 예고 알림" desc="초기화가 예고되면 미리 알려드려요" checked={sub.types.planned} onChange={v => onChange({ ...sub.types, planned: v })} />
       {sub.since && <p className="small">{kstLabel(sub.since)}부터 알림을 받고 있어요</p>}
       <button className="text-button danger" onClick={() => onChange({ reset: false, planned: false })}>알림 끄기</button>
     </div>
@@ -365,14 +362,14 @@ const policyTitle = { terms: '이용약관', privacy: '개인정보 처리방침
 function Policy({ kind }: { kind: 'terms' | 'privacy' }) {
   const sections = {
     terms: [
-      ['서비스 안내', 'GPT 리셋 레이더는 블루씨엘이 운영하며, OpenAI가 공개한 GPT 사용량 리셋 소식을 10분 간격으로 확인해 알려드리는 무료 참고용 서비스예요. 리셋 기록은 독립 트래커 codex-reset.com의 공개 데이터를 사용해요. OpenAI·X·codex-reset.com과 제휴하거나 승인받은 서비스가 아니에요.'],
-      ['알림의 한계', '게시물 확인 주기, X·토스 서비스 상태, 자동 분류 오류로 알림이 늦거나 누락되거나 잘못 갈 수 있어요. 리셋 여부와 횟수는 OpenAI가 정하며 GPT 리셋 레이더는 이를 보장하지 않아요. 실제 사용량은 GPT에서 확인해 주세요.'],
+      ['서비스 안내', 'GPT 리셋 레이더는 블루씨엘이 운영하며, OpenAI가 공개한 GPT 사용량 초기화 소식을 10분 간격으로 확인해 알려드리는 무료 참고용 서비스예요. 초기화 기록은 독립 트래커 codex-reset.com의 공개 데이터를 사용해요. OpenAI·X·codex-reset.com과 제휴하거나 승인받은 서비스가 아니에요.'],
+      ['알림의 한계', '게시물 확인 주기, X·토스 서비스 상태, 자동 분류 오류로 알림이 늦거나 누락되거나 잘못 갈 수 있어요. 초기화 여부와 횟수는 OpenAI가 정하며 GPT 리셋 레이더는 이를 보장하지 않아요. 실제 사용량은 GPT에서 확인해 주세요.'],
       ['알림 해지', '앱의 알림 설정에서 언제든 알림을 끌 수 있어요. GPT 리셋 레이더는 무료로 제공해요.'],
       ['변경과 문의', '서비스 내용이 바뀌거나 중단될 수 있으며 중요한 변경은 시행 7일 전에 앱에서 알려드려요. 문의: bluecl@bluecl.cloud'],
     ],
     privacy: [
       ['수집하는 정보', '알림을 받기로 하면 토스가 이 미니앱 전용으로 발급하는 사용자 식별키와 알림 종류 설정을 저장해요. 이름·전화번호 같은 개인 정보는 받지 않아요.'],
-      ['이용 목적', '선택한 리셋 알림을 토스 메시지로 보내는 데만 사용해요.'],
+      ['이용 목적', '선택한 초기화 알림을 토스 메시지로 보내는 데만 사용해요.'],
       ['보관 기간', '알림을 끄면 발송 대상에서 바로 제외하고, 30일 안에 알림 설정을 삭제해요. 서버 접속 기록은 14일 후 삭제해요.'],
       ['문의', '열람·삭제 요청은 bluecl@bluecl.cloud로 보내 주세요.'],
     ],

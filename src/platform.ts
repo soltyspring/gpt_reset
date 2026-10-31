@@ -63,7 +63,7 @@ export async function createAuthCode(): Promise<string | null> {
 
 /** 친구에게 앱 공유 */
 export async function shareApp() {
-  const message = 'GPT 사용량이 리셋되면 토스로 바로 알려줘요. GPT 리셋 레이더';
+  const message = 'GPT 사용량이 초기화되면 토스로 바로 알려줘요. GPT 리셋 레이더';
   if (isNativeToss()) {
     try {
       const link = await Share.createLink({ path: 'intoss://tibo' });

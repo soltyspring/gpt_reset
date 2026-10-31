@@ -56,7 +56,7 @@ test('대상 범위를 한국어로 뽑아요', () => {
 });
 
 test('토스 문구는 해요체예요', () => {
-  assert.deepEqual(koreanCopy('reset', '모든 유료 플랜'), { title: 'GPT 사용량이 리셋됐어요', summary: '모든 유료 플랜 사용량이 다시 채워졌어요. 지금 바로 써 보세요.' });
+  assert.deepEqual(koreanCopy('reset', '모든 유료 플랜'), { title: 'GPT 사용량이 초기화됐어요', summary: '모든 유료 플랜 사용량이 다시 채워졌어요. 지금 바로 써 보세요.' });
   assert.match(koreanCopy('planned', '').summary, /알려드릴게요/);
 });
 

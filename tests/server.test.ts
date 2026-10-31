@@ -44,7 +44,7 @@ test('새 리셋 공지를 구독자에게 보내고 같은 글은 다시 보내
   const sends = s.calls.filter(l => l.path.endsWith('/send-message'));
   assert.deepEqual(sends.map(l => l.headers['x-anon-key']).sort(), ['u1', 'u2']);
   assert.equal(sends[0].body.templateSetCode, 'tibo-reset');
-  assert.equal(sends[0].body.context.title, 'GPT 사용량이 리셋됐어요');
+  assert.equal(sends[0].body.context.title, 'GPT 사용량이 초기화됐어요');
   const [e] = s.store.publicEvents();
   assert.equal(e.status, 'sent');
   assert.equal(e.notifiedCount, 2);

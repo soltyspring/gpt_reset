@@ -148,12 +148,12 @@ export function scopeOf(text: string) {
 export function koreanCopy(kind: Exclude<ResetKind, 'none'>, scope: string) {
   const who = scope ? `${scope} ` : '';
   if (kind === 'reset') return {
-    title: 'GPT 사용량이 리셋됐어요',
+    title: 'GPT 사용량이 초기화됐어요',
     summary: `${who}사용량이 다시 채워졌어요. 지금 바로 써 보세요.`.replace(/^\s+/, ''),
   };
   return {
-    title: '곧 GPT 사용량이 리셋돼요',
-    summary: `${who}리셋이 예고됐어요. 리셋되면 다시 알려드릴게요.`,
+    title: '곧 GPT 사용량이 초기화돼요',
+    summary: `${who}초기화가 예고됐어요. 초기화되면 다시 알려드릴게요.`,
   };
 }
 
